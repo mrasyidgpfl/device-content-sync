@@ -1,0 +1,27 @@
+services:
+  stub-server:
+    build:
+      context: .
+    entrypoint: ["stub-server"]
+    ports:
+      - "8080:8080"
+    environment:
+      - CONTENT_BASE_URL=http://stub-server:8080
+
+  syncer:
+    build:
+      context: .
+    entrypoint: ["syncer"]
+    environment:
+      - MANIFEST_URL=http://stub-server:8080
+      - CONTENT_DIR=/tmp/winnow
+      - STATE_PATH=/tmp/winnow/.sync-state.json
+      - POLL_INTERVAL=10s
+      - DEVICE_TOKEN=test-device-001
+    volumes:
+      - winnow-content:/tmp/winnow
+    depends_on:
+      - stub-server
+
+volumes:
+  winnow-content:

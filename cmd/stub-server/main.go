@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 )
 
@@ -30,17 +31,19 @@ type ManifestResponse struct {
 
 type stubServer struct {
 	mu       sync.RWMutex
+	baseURL  string
 	manifest ManifestResponse
 }
 
-func newStubServer() *stubServer {
+func newStubServer(baseURL string) *stubServer {
 	return &stubServer{
+		baseURL: baseURL,
 		manifest: ManifestResponse{
 			Menus: &ManifestItem{
 				Items: []ContentItem{
 					{
 						Name:      "current-menu",
-						URI:       "http://localhost:8080/content/menus/current-menu.json",
+						URI:       baseURL + "/content/menus/current-menu.json",
 						ExpiresAt: "2026-12-31T23:59:59Z",
 						ETag:      "menu-v1",
 					},
@@ -50,13 +53,13 @@ func newStubServer() *stubServer {
 				Items: []ContentItem{
 					{
 						Name:      "icon-1.png",
-						URI:       "http://localhost:8080/content/icons/icon-1.png",
+						URI:       baseURL + "/content/icons/icon-1.png",
 						ExpiresAt: "2026-12-31T23:59:59Z",
 						ETag:      "icon1-v1",
 					},
 					{
 						Name:      "icon-2.png",
-						URI:       "http://localhost:8080/content/icons/icon-2.png",
+						URI:       baseURL + "/content/icons/icon-2.png",
 						ExpiresAt: "2026-12-31T23:59:59Z",
 						ETag:      "icon2-v1",
 					},
@@ -111,7 +114,7 @@ func (s *stubServer) handleAdmin(w http.ResponseWriter, r *http.Request) {
 	case "add-icon":
 		s.manifest.Icons.Items = append(s.manifest.Icons.Items, ContentItem{
 			Name:      "icon-3.png",
-			URI:       "http://localhost:8080/content/icons/icon-3.png",
+			URI:       s.baseURL + "/content/icons/icon-3.png",
 			ExpiresAt: "2026-12-31T23:59:59Z",
 			ETag:      "icon3-v1",
 		})
@@ -137,7 +140,12 @@ func (s *stubServer) handleAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	s := newStubServer()
+	baseURL := os.Getenv("CONTENT_BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+
+	s := newStubServer(baseURL)
 
 	http.HandleFunc("/v2/manifest", s.handleManifest)
 	http.HandleFunc("/content/", s.handleContent)
