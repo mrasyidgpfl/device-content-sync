@@ -1,0 +1,5 @@
+.git
+.gitignore
+README.md
+TODO.md
+*.state.json
