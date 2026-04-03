@@ -103,6 +103,9 @@ func (s *Syncer) processManifest(ctx context.Context, m manifest.ManifestRespons
 		}
 
 		for _, ci := range item.Items {
+			if ctx.Err() != nil {
+				return
+			}
 			key := fmt.Sprintf("%s/%s", contentType, ci.Name)
 			seen[key] = true
 
